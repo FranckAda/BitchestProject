@@ -3,6 +3,8 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
+const r = await fetch("/api/ping");
+console.log(await r.json());
 function App() {
   const [count, setCount] = useState(0)
 
