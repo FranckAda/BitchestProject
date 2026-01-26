@@ -6,7 +6,10 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+#[ORM\InheritanceType("JOINED")]
+#[ORM\DiscriminatorColumn(name: "discr", type: "string")]
+#[ORM\DiscriminatorMap(["admin" => Admin::class, "client" => Client::class])]
+abstract class User
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
