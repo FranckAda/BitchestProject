@@ -17,7 +17,7 @@
             </tr>
         </thead>
         <tbody>
-        {% for client in clients %}
+        {% for client in users %}
             <tr>
                 <td>{{ client.id }}</td>
                 <td>{{ client.email }}</td>
@@ -37,5 +37,5 @@
         </tbody>
     </table>
 
-    <a href="{{ path('app_client_new') }}">Create new</a>
+    
 {% endblock %}
