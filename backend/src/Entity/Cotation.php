@@ -19,6 +19,10 @@ class Cotation
     #[ORM\Column]
     private ?\DateTime $date = null;
 
+    #[ORM\ManyToOne(inversedBy: 'cotation')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?CryptoCurrency $cryptoCurrency = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -44,6 +48,18 @@ class Cotation
     public function setDate(\DateTime $date): static
     {
         $this->date = $date;
+
+        return $this;
+    }
+
+    public function getCryptoCurrency(): ?CryptoCurrency
+    {
+        return $this->cryptoCurrency;
+    }
+
+    public function setCryptoCurrency(?CryptoCurrency $cryptoCurrency): static
+    {
+        $this->cryptoCurrency = $cryptoCurrency;
 
         return $this;
     }
