@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\AcquiredCrypto;
+use App\Entity\AcquieredCrypto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<AcquiredCrypto>
+ * @extends ServiceEntityRepository<AcquieredCrypto>
  */
-class AcquiredCryptoRepository extends ServiceEntityRepository
+class AcquieredCryptoRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, AcquiredCrypto::class);
+        parent::__construct($registry, AcquieredCrypto::class);
     }
 
     //    /**
-    //     * @return AcquiredCrypto[] Returns an array of AcquiredCrypto objects
+    //     * @return AcquieredCrypto[] Returns an array of AcquieredCrypto objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -31,7 +31,7 @@ class AcquiredCryptoRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?AcquiredCrypto
+    //    public function findOneBySomeField($value): ?AcquieredCrypto
     //    {
     //        return $this->createQueryBuilder('a')
     //            ->andWhere('a.exampleField = :val')

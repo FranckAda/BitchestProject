@@ -11,6 +11,9 @@ class WalletType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $builder
+            ->add('balance')
+        ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

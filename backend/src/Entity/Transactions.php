@@ -22,6 +22,10 @@ class Transactions
     #[ORM\Column]
     private ?\DateTime $date = null;
 
+    #[ORM\ManyToOne(inversedBy: 'transactions')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Wallet $walletId = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -59,6 +63,18 @@ class Transactions
     public function setDate(\DateTime $date): static
     {
         $this->date = $date;
+
+        return $this;
+    }
+
+    public function getWalletId(): ?Wallet
+    {
+        return $this->walletId;
+    }
+
+    public function setWalletId(?Wallet $walletId): static
+    {
+        $this->walletId = $walletId;
 
         return $this;
     }

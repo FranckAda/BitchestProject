@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\WalletRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WalletRepository::class)]
@@ -15,6 +17,27 @@ class Wallet
 
     #[ORM\Column]
     private ?float $balance = null;
+
+    #[ORM\OneToOne(inversedBy: 'wallet', cascade: ['persist', 'remove'])]
+    private ?User $clientId = null;
+
+    /**
+     * @var Collection<int, Transactions>
+     */
+    #[ORM\OneToMany(targetEntity: Transactions::class, mappedBy: 'walletId', orphanRemoval: true)]
+    private Collection $transactions;
+
+    /**
+     * @var Collection<int, AcquieredCrypto>
+     */
+    #[ORM\OneToMany(targetEntity: AcquieredCrypto::class, mappedBy: 'walletId', orphanRemoval: true)]
+    private Collection $aqcuieredCryptos;
+
+    public function __construct()
+    {
+        $this->transactions = new ArrayCollection();
+        $this->aqcuieredCryptos = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -29,6 +52,78 @@ class Wallet
     public function setBalance(float $balance): static
     {
         $this->balance = $balance;
+
+        return $this;
+    }
+
+    public function getClientId(): ?User
+    {
+        return $this->clientId;
+    }
+
+    public function setClientId(?User $clientId): static
+    {
+        $this->clientId = $clientId;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Transactions>
+     */
+    public function getTransactions(): Collection
+    {
+        return $this->transactions;
+    }
+
+    public function addTransaction(Transactions $transaction): static
+    {
+        if (!$this->transactions->contains($transaction)) {
+            $this->transactions->add($transaction);
+            $transaction->setWalletId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTransaction(Transactions $transaction): static
+    {
+        if ($this->transactions->removeElement($transaction)) {
+            // set the owning side to null (unless already changed)
+            if ($transaction->getWalletId() === $this) {
+                $transaction->setWalletId(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AcquieredCrypto>
+     */
+    public function getAqcuieredCryptos(): Collection
+    {
+        return $this->aqcuieredCryptos;
+    }
+
+    public function addAqcuieredCrypto(AcquieredCrypto $aqcuieredCrypto): static
+    {
+        if (!$this->aqcuieredCryptos->contains($aqcuieredCrypto)) {
+            $this->aqcuieredCryptos->add($aqcuieredCrypto);
+            $aqcuieredCrypto->setWalletId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAqcuieredCrypto(AcquieredCrypto $aqcuieredCrypto): static
+    {
+        if ($this->aqcuieredCryptos->removeElement($aqcuieredCrypto)) {
+            // set the owning side to null (unless already changed)
+            if ($aqcuieredCrypto->getWalletId() === $this) {
+                $aqcuieredCrypto->setWalletId(null);
+            }
+        }
 
         return $this;
     }
