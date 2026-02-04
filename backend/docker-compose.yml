@@ -8,12 +8,15 @@ services:
             MYSQL_DATABASE: bitchest
         ports:
             - "3306:3306"
+
     backend:
         build: ./
         ports:
-            - "8000"
+            - "8000:8000"
         depends_on:
             - mysql
+        environment:
+            DATABASE_URL: "mysql://root:root@mysql:3306/bitchest?serverVersion=8.0.41&charset=utf8mb4"
 
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
