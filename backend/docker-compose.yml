@@ -5,13 +5,13 @@ services:
         restart: always
         environment:
             MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: mydb
+            MYSQL_DATABASE: bitchest
         ports:
             - "3306:3306"
     backend:
         build: ./
         ports:
-            - "8000:8000"
+            - "8000"
         depends_on:
             - mysql
 

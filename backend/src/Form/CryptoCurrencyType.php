@@ -13,7 +13,7 @@ class CryptoCurrencyType extends AbstractType
     {
         $builder
             ->add('name')
-            ->add('symbol')
+            ->add('actualValue')
         ;
     }
 

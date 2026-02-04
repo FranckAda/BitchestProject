@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Entity;
-
+use App\Enum\Roles;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -24,6 +24,9 @@ class User
 
     #[ORM\Column(enumType: Roles::class)]
     private ?Roles $role = null;
+
+    #[ORM\OneToOne(mappedBy: 'clientId', cascade: ['persist', 'remove'])]
+    private ?Wallet $wallet = null;
 
     public function getId(): ?int
     {
@@ -74,6 +77,28 @@ class User
     public function setRole(Roles $role): static
     {
         $this->role = $role;
+
+        return $this;
+    }
+
+    public function getWallet(): ?Wallet
+    {
+        return $this->wallet;
+    }
+
+    public function setWallet(?Wallet $wallet): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($wallet === null && $this->wallet !== null) {
+            $this->wallet->setClientId(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($wallet !== null && $wallet->getClientId() !== $this) {
+            $wallet->setClientId($this);
+        }
+
+        $this->wallet = $wallet;
 
         return $this;
     }
