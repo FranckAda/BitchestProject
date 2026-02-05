@@ -18,11 +18,18 @@ final class WalletController extends AbstractController
     public function index(WalletRepository $walletRepository): JsonResponse
     {
         $wallets = $walletRepository->findAll();
-        if ($wallets) {
-            return $this->json($wallets);
-        } else {
+        if (!$wallets) {
             return $this->json(['message' => 'No wallets found'], 404);
         }
+
+        $result = array_map(
+            fn(Wallet $w) => $this->walletToArray($w),
+            $wallets
+        );
+
+        return $this->json([
+            'wallets' => $result
+        ]);
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
@@ -49,7 +56,11 @@ final class WalletController extends AbstractController
         $entityManager->persist($wallet);
         $entityManager->flush();
 
-        return $this->json($wallet);
+        return new JsonResponse([
+            'id' => $wallet->getId(),
+            'balance' => $wallet->getBalance(),
+            'clientId' => $wallet->getClientId(),
+        ]);
     }
 
 
@@ -85,7 +96,7 @@ final class WalletController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->json($wallet);
+        return $this->json($this->walletToArray($wallet));
     }
 
     #[Route('/{id}/delete', name: '_delete', methods: ['DELETE'])]
@@ -94,6 +105,18 @@ final class WalletController extends AbstractController
         $entityManager->remove($wallet);
         $entityManager->flush();
 
-        return $this->json(['message' => 'User deleted successfully'], 200);
+        return $this->json(['message' => 'Wallet deleted successfully'], 200);
+    }
+    private function walletToArray(Wallet $wallet): array
+    {
+        $client = $wallet->getClientId();
+
+        return [
+            'id' => $wallet->getId(),
+            'balance' => $wallet->getBalance(),
+            'client' => $client ? [
+                'id' => $client->getId(),
+            ] : null,
+        ];
     }
 }

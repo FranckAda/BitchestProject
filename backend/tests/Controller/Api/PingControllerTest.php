@@ -4,7 +4,7 @@ namespace App\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-final class Api/PingControllerTest extends WebTestCase
+final class ApiPingControllerTest extends WebTestCase
 {
     public function testIndex(): void
     {
