@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Wallet;
+use App\Enum\Roles;
 use App\Form\UserType;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -38,6 +40,40 @@ final class UserController extends AbstractController
       return $this->json($this->userToArray($user));
     }
   }
+  #[Route('/new', name: '_create', methods: ['POST'])]
+  public function create(Request $request, EntityManagerInterface $em): JsonResponse
+  {
+    $data = json_decode($request->getContent(), true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+      return $this->json(['error' => 'Invalid JSON: ' . json_last_error_msg()], 400);
+    }
+
+    $user = new User();
+    $user->setCreationDate(new \DateTime());
+
+    $form = $this->createForm(UserType::class, $user);
+    $form->submit($data);
+
+    if (!$form->isValid()) {
+      return $this->json([
+        'errors' => (string) $form->getErrors(true, false),
+      ], 422);
+    }
+
+    if ($user->getRole() === Roles::CLIENT && $user->getWallet() === null) {
+      $wallet = new Wallet();
+      $wallet->setBalance(500);
+      $user->setWallet($wallet);
+      $em->persist($wallet);
+    }
+
+    $em->persist($user);
+    $em->flush();
+
+    return $this->json($this->userToArray($user), 201);
+  }
+
 
   #[Route('/{id}/edit', name: '_update', methods: ['PUT', 'PATCH'])]
   public function update(Request $request, EntityManagerInterface $entityManager, User $user): JsonResponse

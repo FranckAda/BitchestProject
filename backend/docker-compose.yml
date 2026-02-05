@@ -9,12 +9,11 @@ services:
             MYSQL_DATABASE: bitchest
         ports:
             - "3306:3306"
-            - "8000:8000"
+            # - "8000:8000"
 
-    backend:
-        build: ./
-        network_mode: service:mysql
-        
+    # backend:
+    #     build: ./
+    #     network_mode: service:mysql
 
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
