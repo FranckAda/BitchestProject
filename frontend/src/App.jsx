@@ -8,12 +8,12 @@ import {
 import Login from "./pages/Login";
 import "./App.css";
 import EditForm from "./Components/EditForm";
+import NewForm from "./Components/NewForm";
 
 export default function App() {
-  const [count, setCount] = useState(0);
-
+  
   useEffect(() => {
-    fetch("/api/health") // ✅ passe par le proxy Vite
+    fetch("/api/health") 
       .then((r) => r.json())
       .then((data) => console.log("health:", data))
       .catch((err) => console.error("health error:", err));
@@ -25,6 +25,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/edit" element={<EditForm userId={1} />} />
+        <Route path="/new" element={<NewForm />} />
       </Routes>
     </Router>
   );
