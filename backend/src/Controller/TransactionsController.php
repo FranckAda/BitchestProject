@@ -54,8 +54,14 @@ final class TransactionsController extends AbstractController
     }
 
     #[Route('/{id}', name: '_show', methods: ['GET'])]
-    public function show(Transactions $transactions): JsonResponse
+    public function show(int $id, TransactionsRepository $transactionsRepository): JsonResponse
     {
+        $transactions = $transactionsRepository->find($id);
+
+        if (!$transactions) {
+            return $this->json(['message' => 'Transactions not found'], 404);
+        }
+
         return $this->json($transactions);
     }
 

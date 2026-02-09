@@ -32,14 +32,17 @@ final class UserController extends AbstractController
   }
 
   #[Route('/{id}', name: '_show', methods: ['GET'])]
-  public function show(User $user): JsonResponse
+  public function show(int $id, UserRepository $userRepository): JsonResponse
   {
+    $user = $userRepository->find($id);
+
     if (!$user) {
       return $this->json(['message' => 'User not found'], 404);
-    } else {
-      return $this->json($this->userToArray($user));
     }
+
+    return $this->json($this->userToArray($user));
   }
+
   #[Route('/new', name: '_create', methods: ['POST'])]
   public function create(Request $request, EntityManagerInterface $em): JsonResponse
   {

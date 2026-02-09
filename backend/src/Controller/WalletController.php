@@ -65,8 +65,14 @@ final class WalletController extends AbstractController
 
 
     #[Route('/{id}', name: 'app_wallet_show', methods: ['GET'])]
-    public function show(Wallet $wallet): JsonResponse
+    public function show(int $id, WalletRepository $walletRepository): JsonResponse
     {
+        $wallet = $walletRepository->find($id);
+
+        if (!$wallet) {
+            return $this->json(['message' => 'Wallet not found'], 404);
+        }
+
         return $this->json($wallet);
     }
 

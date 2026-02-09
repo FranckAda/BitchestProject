@@ -54,8 +54,14 @@ final class CryptoCurrencyController extends AbstractController
     }
 
     #[Route('/{id}', name: '_show', methods: ['GET'])]
-    public function show(CryptoCurrency $CryptoCurrency): JsonResponse
+    public function show(int $id, CryptoCurrencyRepository $CryptoCurrencyRepository): JsonResponse
     {
+        $CryptoCurrency = $CryptoCurrencyRepository->find($id);
+
+        if (!$CryptoCurrency) {
+            return $this->json(['message: no crypto founded'], 404);
+        }
+
         return $this->json($CryptoCurrency);
     }
 

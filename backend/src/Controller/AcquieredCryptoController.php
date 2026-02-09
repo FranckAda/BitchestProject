@@ -55,8 +55,12 @@ final class AcquieredCryptoController extends AbstractController
     }
 
     #[Route('/{id<\d+>}', name: 'show', methods: ['GET'])]
-    public function show(AcquieredCrypto $acquieredCrypto): JsonResponse
+    public function show(int $id, AcquieredCryptoRepository $acquieredCryptoRepository): JsonResponse
     {
+        $acquieredCrypto = $acquieredCryptoRepository->find($id);
+        if (!$acquieredCrypto) {
+            return $this->json(['No crypto founded'], 404);
+        }
         return $this->json($acquieredCrypto);
     }
 
