@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function NewForm() {
+export default function NewForm({ service }) {
   const [mail, setMail] = useState("");
   const [role, setRole] = useState("client");
   const [password, setPassword] = useState("");
@@ -11,7 +11,7 @@ export default function NewForm() {
     const payload = { mail, role };
     if (password.trim() !== "") payload.password = password;
 
-    const res = await fetch(`/api/admin/new`, {
+    const res = await fetch(`/api/${service}/new`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

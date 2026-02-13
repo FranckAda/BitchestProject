@@ -7,13 +7,13 @@ import {
 } from "react-router-dom";
 import Login from "./pages/Login";
 import "./App.css";
-import EditForm from "./Components/EditForm";
-import NewForm from "./Components/NewForm";
+import EditForm from "./Components/admin/EditForm";
+import NewForm from "./Components/admin/NewForm";
+import Dashbord from "./Components/admin/Dashboard";
 
 export default function App() {
-  
   useEffect(() => {
-    fetch("/api/health") 
+    fetch("/api/health")
       .then((r) => r.json())
       .then((data) => console.log("health:", data))
       .catch((err) => console.error("health error:", err));
@@ -24,8 +24,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/edit" element={<EditForm userId={1} />} />
-        <Route path="/new" element={<NewForm />} />
+        <Route path="/edit" element={<EditForm userId={2} />} />
+        <Route path="/new" element={<NewForm service="admin" />} />
+        <Route path="/dashboard" element={<Dashbord />} />
       </Routes>
     </Router>
   );
