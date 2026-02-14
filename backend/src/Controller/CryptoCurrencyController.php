@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('api/cryptocurrency', name: "api_cryptocurrency_")]
+#[Route('api/crypto', name: "api_cryptocurrency_")]
 final class CryptoCurrencyController extends AbstractController
 {
     #[Route('', name: '_list', methods: ['GET'])]
