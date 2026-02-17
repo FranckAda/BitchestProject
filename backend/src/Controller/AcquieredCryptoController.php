@@ -23,7 +23,7 @@ final class AcquieredCryptoController extends AbstractController
         }
 
         $result = array_map(
-            fn(AcquieredCrypto $a) => $this->walletToArray($a),
+            fn(AcquieredCrypto $a) => $this->cryptoToArray($a),
             $acquieredCrypto
         );
 
@@ -69,7 +69,7 @@ final class AcquieredCryptoController extends AbstractController
         if (!$acquieredCrypto) {
             return $this->json(['No crypto founded'], 404);
         }
-        return $this->json($acquieredCrypto);
+        return $this->json($this->cryptoToArray($acquieredCrypto));
     }
 
     #[Route('/{id<\d+>}/edit', name: 'update', methods: ['PUT', 'PATCH'])]
@@ -110,7 +110,7 @@ final class AcquieredCryptoController extends AbstractController
         return $this->json(['message' => 'AcquieredCrypto deleted successfully'], 200);
     }
 
-    private function walletToArray(AcquieredCrypto $acquieredCrypto): array
+    private function cryptoToArray(AcquieredCrypto $acquieredCrypto): array
     {
         $wallet = $acquieredCrypto->getWalletId();
         $crypto = $acquieredCrypto->getCryptoId();
@@ -122,6 +122,7 @@ final class AcquieredCryptoController extends AbstractController
             ] : null,
             'crypto' => $crypto ? [
                 'id' => $crypto->getId(),
+                'name' => $crypto->getName()
             ] : null
         ];
     }
