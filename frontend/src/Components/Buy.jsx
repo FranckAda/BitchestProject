@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 export default function BuyCrypto({ cryptoId, walletInfo }) {
+  const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -36,8 +39,9 @@ export default function BuyCrypto({ cryptoId, walletInfo }) {
 
     const data2 = await rest.json().catch(() => null);
     console.log("PATCH result:", data2);
+
+    navigate("/crypto");
   };
-  console.log(crypto);
 
   return <button onClick={handleSubmit}> Buy Crypto {cryptoId} </button>;
 }
