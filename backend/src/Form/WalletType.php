@@ -2,7 +2,9 @@
 
 namespace App\Form;
 
+use App\Entity\User;
 use App\Entity\Wallet;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -13,6 +15,10 @@ class WalletType extends AbstractType
     {
         $builder
             ->add('balance')
+            ->add('clientId', EntityType::class, [
+                'class' => User::class,
+                'choice_label' => 'id',
+            ])
         ;
     }
 
@@ -20,6 +26,7 @@ class WalletType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Wallet::class,
+            'csrf_protection' => false,
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Repository\WalletRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Entity(repositoryClass: WalletRepository::class)]
 class Wallet
@@ -17,7 +18,7 @@ class Wallet
 
     #[ORM\Column]
     private ?float $balance = null;
-
+    #[Ignore]
     #[ORM\OneToOne(inversedBy: 'wallet', cascade: ['persist', 'remove'])]
     private ?User $clientId = null;
 

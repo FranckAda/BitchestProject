@@ -21,6 +21,7 @@ class CryptoCurrencyType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => CryptoCurrency::class,
+            'csrf_protection' => false,
         ]);
     }
 }

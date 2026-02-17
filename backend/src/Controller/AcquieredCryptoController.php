@@ -18,14 +18,21 @@ final class AcquieredCryptoController extends AbstractController
     public function index(AcquieredCryptoRepository $acquieredCryptoRepository): JsonResponse
     {
         $acquieredCrypto = $acquieredCryptoRepository->findAll();
-        if ($acquieredCrypto) {
-            return $this->json($acquieredCrypto);
-        } else {
-            return $this->json(['message' => 'No acquired ']);
+        if (!$acquieredCrypto) {
+            return $this->json(['message' => 'No acquieredCrypto found'], 404);
         }
+
+        $result = array_map(
+            fn(AcquieredCrypto $a) => $this->walletToArray($a),
+            $acquieredCrypto
+        );
+
+        return $this->json([
+            'acquieredCrypto' => $result
+        ]);
     }
 
-    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
+    #[Route('/new', name: 'new', methods: ['POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -44,13 +51,14 @@ final class AcquieredCryptoController extends AbstractController
             ], 422);
         }
 
-
         $entityManager->persist($acquiriedCrypto);
         $entityManager->flush();
 
-        return $this->json([
-            'message' => 'AcquieredCrypto created',
+        return new JsonResponse([
             'id' => $acquiriedCrypto->getId(),
+            'value' => $acquiriedCrypto->getValue(),
+            'walletId' => $acquiriedCrypto->getWalletId(),
+            'cryptoId' => $acquiriedCrypto->getCryptoId()
         ]);
     }
 
@@ -100,5 +108,21 @@ final class AcquieredCryptoController extends AbstractController
         $entityManager->flush();
 
         return $this->json(['message' => 'AcquieredCrypto deleted successfully'], 200);
+    }
+
+    private function walletToArray(AcquieredCrypto $acquieredCrypto): array
+    {
+        $wallet = $acquieredCrypto->getWalletId();
+        $crypto = $acquieredCrypto->getCryptoId();
+        return [
+            'id' => $acquieredCrypto->getId(),
+            'value' => $acquieredCrypto->getValue(),
+            'wallet' => $wallet ? [
+                'id' => $wallet->getId(),
+            ] : null,
+            'crypto' => $crypto ? [
+                'id' => $crypto->getId(),
+            ] : null
+        ];
     }
 }

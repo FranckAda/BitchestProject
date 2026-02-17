@@ -73,10 +73,10 @@ final class WalletController extends AbstractController
             return $this->json(['message' => 'Wallet not found'], 404);
         }
 
-        return $this->json($wallet);
+        return $this->json($this->walletToArray($wallet));
     }
 
-    #[Route('/{id}/edit', name: 'app_wallet_edit', methods: ['GET', 'POST'])]
+    #[Route('/{id}/edit', name: 'app_wallet_edit', methods: ['PUT', 'PATCH'])]
     public function update(
         Request $request,
         EntityManagerInterface $entityManager,

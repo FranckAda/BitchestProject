@@ -19,11 +19,19 @@ final class CryptoCurrencyController extends AbstractController
     {
         $CryptoCurrencies = $CryptoCurrencyRepository->findAll();
 
-        if ($CryptoCurrencies) {
-            return $this->json($CryptoCurrencies);
-        } else {
+
+        if (!$CryptoCurrencies) {
             return $this->json(['message' => 'No CryptoCurrencies found'], 404);
         }
+
+        $result = array_map(
+            fn(CryptoCurrency $c) => $this->cryptoToArray($c),
+            $CryptoCurrencies
+        );
+
+        return $this->json([
+            'CryptoCurrencies' => $result
+        ]);
     }
 
     #[Route('/new', name: '_create', methods: ['POST'])]
@@ -62,7 +70,7 @@ final class CryptoCurrencyController extends AbstractController
             return $this->json(['message: no crypto founded'], 404);
         }
 
-        return $this->json($CryptoCurrency);
+        return $this->json($this->cryptoToArray($CryptoCurrency));
     }
 
     #[Route('/{id}/edit', name: '_update', methods: ['PUT', 'PATCH'])]
@@ -101,5 +109,24 @@ final class CryptoCurrencyController extends AbstractController
         $entityManager->flush();
 
         return $this->json(['message' => 'CryptoCurrency deleted successfully'], 200);
+    }
+
+    private function cryptoToArray(CryptoCurrency $crypto): array
+    {
+        return [
+            'id' => $crypto->getId(),
+            'name' => $crypto->getName(),
+            'actualValue' => $crypto->getActualValue(),
+            'acquieredCryptos' => array_map(
+                function ($acq) {
+                    return [
+                        'id' => $acq->getId(),
+                        'value' => $acq->getValue(),
+                        'walletId' => $acq->getWalletId()?->getId(),
+                    ];
+                },
+                $crypto->getAqcuieredCryptos()->toArray()
+            )
+        ];
     }
 }
