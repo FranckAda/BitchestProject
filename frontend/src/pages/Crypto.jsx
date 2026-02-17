@@ -25,10 +25,7 @@ export default function CryptoDashbord({ userId }) {
                   <li>{crypto.id}</li>
                   <li>{crypto.actualValue}</li>
                 </ul>
-                <BuyCrypto
-                  cryptoId={crypto.id}
-                  userBalance={user.wallet.balance}
-                />
+                <BuyCrypto cryptoId={crypto.id} walletInfo={user.wallet} />
               </div>
             );
           })

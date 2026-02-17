@@ -19,6 +19,7 @@ export default function EditForm({ userId }) {
 
     const payload = { mail, role };
     if (password.trim() !== "") payload.password = password;
+    console.log(payload);
 
     const res = await fetch(`/api/admin/${userId}/edit`, {
       method: "PATCH",
