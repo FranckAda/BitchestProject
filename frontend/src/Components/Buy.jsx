@@ -40,7 +40,7 @@ export default function BuyCrypto({ cryptoId, walletInfo }) {
     const data2 = await rest.json().catch(() => null);
     console.log("PATCH result:", data2);
 
-    navigate("/crypto");
+    return navigate("/crypto");
   };
 
   return <button onClick={handleSubmit}> Buy Crypto {cryptoId} </button>;

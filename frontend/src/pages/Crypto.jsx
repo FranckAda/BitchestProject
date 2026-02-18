@@ -5,6 +5,7 @@ export default function CryptoDashbord({ userId }) {
   const [cryptos, setCrypto] = useState([]);
   const [acquieredCryptos, setAcquieredCrypto] = useState([]);
   const [user, setUser] = useState({});
+
   useEffect(() => {
     fetch("/api/crypto")
       .then((r) => r.json())
@@ -19,7 +20,24 @@ export default function CryptoDashbord({ userId }) {
       .then((data) => setUser(data || []))
       .catch((err) => console.error("user error:", err));
   }, [userId]);
-  console.log(acquieredCryptos);
+
+  const groupedCryptos = Object.values(
+    acquieredCryptos.reduce((acc, crypto) => {
+      const key = `${crypto.crypto.name}-${crypto.value}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          name: crypto.crypto.name,
+          value: crypto.value,
+          quantity: 0,
+        };
+      }
+
+      acc[key].quantity += 1;
+
+      return acc;
+    }, {}),
+  );
 
   return (
     <>
@@ -37,18 +55,16 @@ export default function CryptoDashbord({ userId }) {
           })
         : ""}
       <h3>You have acquiered :</h3>
-      {acquieredCryptos
-        ? acquieredCryptos.map((crypto) => {
-            return (
-              <div key={crypto.id}>
-                <ul>
-                  <li>{crypto.crypto.name}</li>
-                  <li>{crypto.value}</li>
-                </ul>
-              </div>
-            );
-          })
-        : ""}
+      {groupedCryptos.map((crypto, index) => (
+        <div key={index}>
+          <ul>
+            <li>{crypto.name}</li>
+            <li>Unit value: {crypto.value}</li>
+            <li>Quantity: {crypto.quantity}</li>
+            <li>Total: {crypto.value * crypto.quantity}</li>
+          </ul>
+        </div>
+      ))}
     </>
   );
 }
