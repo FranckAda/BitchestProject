@@ -102,7 +102,7 @@ final class UserController extends AbstractController
 
     return $this->json($this->userToArray($user));
   }
-  #[Route('/{id<\d+>}/delete', name: '_delete', methods: ['GET'])]
+  #[Route('/{id<\d+>}/delete', name: '_delete', methods: ['DELETE'])]
   public function delete(EntityManagerInterface $entityManager, User $user): JsonResponse
   {
     $entityManager->remove($user);

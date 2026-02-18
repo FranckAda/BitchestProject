@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\AcquieredCrypto;
+use App\Entity\Transactions;
 use App\Form\AcquieredCryptoType;
 use App\Repository\AcquieredCryptoRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -50,6 +51,13 @@ final class AcquieredCryptoController extends AbstractController
                 'errors' => (string) $form->getErrors(true),
             ], 422);
         }
+
+        $transactions = new Transactions();
+        $transactions->setDate(new \DateTime());
+        $transactions->setValue($acquiriedCrypto->getValue());
+        $transactions->setCryptoId($acquiriedCrypto->getCryptoId()->getId());
+        $transactions->setWalletId($acquiriedCrypto->getWalletId());
+        $entityManager->persist($transactions);
 
         $entityManager->persist($acquiriedCrypto);
         $entityManager->flush();
