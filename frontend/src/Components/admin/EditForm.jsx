@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function EditForm({ userId }) {
   const [mail, setMail] = useState("");
   const [role, setRole] = useState("client");
   const [password, setPassword] = useState("");
-
+  const navigate = useNavigate();
   useEffect(() => {
     fetch(`/api/admin/${userId}`)
       .then((r) => r.json())
@@ -29,6 +30,7 @@ export default function EditForm({ userId }) {
 
     const data = await res.json().catch(() => null);
     console.log("PATCH result:", data);
+    navigate("/");
   };
 
   return (

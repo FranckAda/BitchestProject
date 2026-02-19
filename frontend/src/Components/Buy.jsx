@@ -1,13 +1,23 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export default function BuyCrypto({ cryptoId, walletInfo }) {
-  const navigate = useNavigate();
+  const [cryptoData, setCryptoData] = useState([]);
+  useEffect(() => {
+    const fetchCrypto = async () => {
+      const response = await fetch(`/api/crypto/${cryptoId}`);
+      const data = await response.json();
+      setCryptoData(data);
+    };
+
+    fetchCrypto();
+
+    const interval = setInterval(fetchCrypto, 5000);
+
+    return () => clearInterval(interval);
+  }, [cryptoId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const response = await fetch(`/api/crypto/${cryptoId}`);
-    const cryptoData = await response.json();
-
     if (!cryptoData) return;
 
     if (cryptoData.actualValue > walletInfo.balance) {
@@ -39,8 +49,7 @@ export default function BuyCrypto({ cryptoId, walletInfo }) {
 
     const data2 = await rest.json().catch(() => null);
     console.log("PATCH result:", data2);
-
-    return navigate("/crypto");
+    alert(`You have successfully bought ${cryptoData.name}`);
   };
 
   return <button onClick={handleSubmit}> Buy Crypto {cryptoId} </button>;

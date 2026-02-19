@@ -53,7 +53,7 @@ export default function CryptoDashbord({ userId }) {
               </div>
             );
           })
-        : ""}
+        : "No cryptos founded"}
       <h3>You have acquiered :</h3>
       {groupedCryptos.map((crypto, index) => (
         <div key={index}>
