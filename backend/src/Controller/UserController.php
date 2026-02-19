@@ -7,6 +7,7 @@ use App\Entity\Wallet;
 use App\Enum\Roles;
 use App\Form\UserType;
 use App\Repository\UserRepository;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,7 +31,7 @@ final class UserController extends AbstractController
 
     return $this->json(['users' => $result]);
   }
-
+  
   #[Route('/{id}', name: '_show', methods: ['GET'])]
   public function show(int $id, UserRepository $userRepository): JsonResponse
   {
@@ -44,7 +45,7 @@ final class UserController extends AbstractController
   }
 
   #[Route('/new', name: '_create', methods: ['POST'])]
-  public function create(Request $request, EntityManagerInterface $em): JsonResponse
+  public function create(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
   {
     $data = json_decode($request->getContent(), true);
 
@@ -53,6 +54,9 @@ final class UserController extends AbstractController
     }
 
     $user = new User();
+    $plainPassword = $this->generatePassword();
+    $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+    $user->setPassword($hashedPassword);
     $user->setCreationDate(new \DateTime());
 
     $form = $this->createForm(UserType::class, $user);
@@ -79,8 +83,12 @@ final class UserController extends AbstractController
 
 
   #[Route('/{id}/edit', name: '_update', methods: ['PUT', 'PATCH'])]
-  public function update(Request $request, EntityManagerInterface $entityManager, User $user): JsonResponse
-  {
+  public function update(
+    Request $request,
+    EntityManagerInterface $entityManager,
+    User $user,
+    UserPasswordHasherInterface $passwordHasher
+  ): JsonResponse {
     $data = json_decode($request->getContent(), true);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
@@ -88,7 +96,6 @@ final class UserController extends AbstractController
     }
 
     $form = $this->createForm(UserType::class, $user);
-
     $clearMissing = $request->getMethod() !== 'PATCH';
     $form->submit($data, $clearMissing);
 
@@ -98,10 +105,18 @@ final class UserController extends AbstractController
       ], 422);
     }
 
+    // Vérifie si un nouveau mot de passe a été envoyé dans $data
+    if (!empty($data['password'])) {
+      $hashedPassword = $passwordHasher->hashPassword($user, $data['password']);
+      $user->setPassword($hashedPassword);
+    }
+
     $entityManager->flush();
 
     return $this->json($this->userToArray($user));
   }
+
+
   #[Route('/{id<\d+>}/delete', name: '_delete', methods: ['DELETE'])]
   public function delete(EntityManagerInterface $entityManager, User $user): JsonResponse
   {
@@ -109,6 +124,18 @@ final class UserController extends AbstractController
     $entityManager->flush();
 
     return $this->json(['message' => 'User deleted successfully'], 200);
+  }
+  private function generatePassword(int $length = 14): string
+  {
+    $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    $charactersLength = strlen($characters);
+    $randomPassword = '';
+
+    for ($i = 0; $i < $length; $i++) {
+      $randomPassword .= $characters[random_int(0, $charactersLength - 1)];
+    }
+
+    return $randomPassword;
   }
   private function userToArray(User $user): array
   {
