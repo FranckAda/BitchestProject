@@ -5,30 +5,39 @@ namespace App\Entity;
 use App\Enum\Roles;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User implements PasswordAuthenticatedUserInterface
+#[UniqueEntity(fields: ['mail'], message: 'Cet email est déjà utilisé.')]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     private ?string $mail = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $password = null;
+    private string $password = '';
 
     #[ORM\Column]
-    private ?\DateTime $creationDate = null;
+    private \DateTimeImmutable $creationDate;
 
     #[ORM\Column(enumType: Roles::class)]
-    private ?Roles $role = null;
+    private Roles $role;
 
-    #[ORM\OneToOne(mappedBy: 'clientId', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'client', cascade: ['persist', 'remove'])]
     private ?Wallet $wallet = null;
+
+    public function __construct()
+    {
+        $this->creationDate = new \DateTimeImmutable();
+        $this->role = Roles::ROLE_USER;
+    }
 
     public function getId(): ?int
     {
@@ -43,35 +52,27 @@ class User implements PasswordAuthenticatedUserInterface
     public function setMail(string $mail): static
     {
         $this->mail = $mail;
-
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getUserIdentifier(): string
     {
-        return $this->password;
+        return (string) $this->mail;
     }
 
-    public function setPassword(string $password): static
+    public function getRoles(): array
     {
-        $this->password = $password;
+        $roles = [$this->role->value];
 
-        return $this;
+        // Garantie du rôle de base
+        if (!in_array(Roles::ROLE_USER->value, $roles, true)) {
+            $roles[] = Roles::ROLE_USER->value;
+        }
+
+        return array_values(array_unique($roles));
     }
 
-    public function getCreationDate(): ?\DateTime
-    {
-        return $this->creationDate;
-    }
-
-    public function setCreationDate(\DateTime $creationDate): static
-    {
-        $this->creationDate = $creationDate;
-
-        return $this;
-    }
-
-    public function getRole(): ?Roles
+    public function getRole(): Roles
     {
         return $this->role;
     }
@@ -79,8 +80,40 @@ class User implements PasswordAuthenticatedUserInterface
     public function setRole(Roles $role): static
     {
         $this->role = $role;
+        return $this;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+        return $this;
+    }
+
+    public function getCreationDate(): \DateTimeImmutable
+    {
+        return $this->creationDate;
+    }
+
+    /**
+     * Accepte DateTime OU DateTimeImmutable, et stocke toujours en DateTimeImmutable.
+     */
+    public function setCreationDate(\DateTimeInterface $creationDate): static
+    {
+        $this->creationDate = $creationDate instanceof \DateTimeImmutable
+            ? $creationDate
+            : \DateTimeImmutable::createFromMutable($creationDate);
 
         return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Si tu stockes un plainPassword temporaire, tu le clears ici
     }
 
     public function getWallet(): ?Wallet
@@ -90,18 +123,15 @@ class User implements PasswordAuthenticatedUserInterface
 
     public function setWallet(?Wallet $wallet): static
     {
-        // unset the owning side of the relation if necessary
         if ($wallet === null && $this->wallet !== null) {
-            $this->wallet->setClientId(null);
+            $this->wallet->setClient(null);
         }
 
-        // set the owning side of the relation if necessary
-        if ($wallet !== null && $wallet->getClientId() !== $this) {
-            $wallet->setClientId($this);
+        if ($wallet !== null && $wallet->getClient() !== $this) {
+            $wallet->setClient($this);
         }
 
         $this->wallet = $wallet;
-
         return $this;
     }
 }

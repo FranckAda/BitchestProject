@@ -4,8 +4,103 @@ import styled from "styled-components";
 export default function Login() {
   const [register, setRegister] = useState(false);
 
+  const [mail, setMail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+
   function Switch() {
-    setRegister(!register);
+    setRegister((v) => !v);
+    setError("");
+    setInfo("");
+  }
+
+  async function apiFetch(url, body) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    console.log("[API] POST", url, body);
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      const text = await res.text();
+      console.log("[API] status", res.status, "body:", text);
+
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.error || text || `Erreur HTTP ${res.status}`);
+      }
+
+      return data;
+    } catch (e) {
+      if (e.name === "AbortError") {
+        throw new Error("Timeout: le serveur ne répond pas (10s).");
+      }
+      throw e;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setInfo("");
+
+    const cleanMail = mail.trim();
+    if (!cleanMail || !password) {
+      setError("Email et mot de passe requis.");
+      return;
+    }
+
+    if (register && password !== confirm) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (register) {
+        await apiFetch("http://localhost:8000/api/register", {
+          mail: cleanMail,
+          password,
+        });
+
+        await apiFetch("http://localhost:8000/api/login", {
+          mail: cleanMail,
+          password,
+        });
+
+        setInfo("Compte créé et connecté");
+      } else {
+        await apiFetch("http://localhost:8000/api/login", {
+          mail: cleanMail,
+          password,
+        });
+
+        setInfo("Connecté");
+      }
+
+    } catch (err) {
+      setError(err.message || "Erreur inconnue");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -15,21 +110,43 @@ export default function Login() {
 
         <Subtitle>{register ? "Sign up" : "Sign in"}</Subtitle>
 
-        <Input type="text" placeholder="Email address" />
-        <Input type="password" placeholder="Password" />
+        <form onSubmit={handleSubmit}>
+          <Input
+            type="email"
+            placeholder="Email address"
+            value={mail}
+            onChange={(e) => setMail(e.target.value)}
+            autoComplete="email"
+          />
 
-        {register && (
-          <Input type="password" placeholder="Confirm password" />
-        )}
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete={register ? "new-password" : "current-password"}
+          />
 
-        <PrimaryButton>
-          {register ? "Sign up" : "Sign in"}
-        </PrimaryButton>
+          {register && (
+            <Input
+              type="password"
+              placeholder="Confirm password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="new-password"
+            />
+          )}
+
+          {error && <MessageError>{error}</MessageError>}
+          {info && <MessageInfo>{info}</MessageInfo>}
+
+          <PrimaryButton disabled={loading} type="submit">
+            {loading ? "..." : register ? "Sign up" : "Sign in"}
+          </PrimaryButton>
+        </form>
 
         <SwitchText>
-          {register
-            ? "Already have an account?"
-            : "Don't have an account?"}
+          {register ? "Already have an account?" : "Don't have an account?"}
           <SwitchSpan onClick={Switch}>
             {register ? " Sign in" : " Sign up"}
           </SwitchSpan>
@@ -95,6 +212,7 @@ const PrimaryButton = styled.button`
   font-weight: bold;
   cursor: pointer;
   transition: 0.3s;
+  opacity: ${(p) => (p.disabled ? 0.6 : 1)};
 
   &:hover {
     opacity: 0.9;
@@ -111,4 +229,16 @@ const SwitchSpan = styled.span`
   font-weight: bold;
   cursor: pointer;
   margin-left: 5px;
+`;
+
+const MessageError = styled.p`
+  margin: 0 0 12px 0;
+  color: #ff6b6b;
+  font-size: 14px;
+`;
+
+const MessageInfo = styled.p`
+  margin: 0 0 12px 0;
+  color: #7bed9f;
+  font-size: 14px;
 `;

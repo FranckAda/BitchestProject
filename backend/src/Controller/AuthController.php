@@ -1,0 +1,146 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\User;
+use App\Entity\UserToken;
+use App\Enum\Roles;
+use App\Repository\UserRepository;
+use App\Repository\UserTokenRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Security;
+
+final class AuthController extends AbstractController
+{
+    #[Route('/api/register', methods: ['POST'])]
+    public function register(
+        Request $request,
+        EntityManagerInterface $em,
+        UserRepository $users,
+        UserPasswordHasherInterface $hasher
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $mail = trim((string)($data['mail'] ?? ''));
+        $password = (string)($data['password'] ?? '');
+
+        if ($mail === '' || $password === '') {
+            return $this->json(['error' => 'mail/password requis'], 400);
+        }
+
+        if ($users->findOneBy(['mail' => $mail])) {
+            return $this->json(['error' => 'mail déjà utilisé'], 409);
+        }
+
+        $user = new User();
+        $user->setMail($mail);
+
+        // Inutile si ton User::__construct() set déjà creationDate + role,
+        // mais on le laisse explicite si tu préfères :
+        // $user->setCreationDate(new \DateTimeImmutable());
+        $user->setRole(Roles::ROLE_USER);
+
+        $user->setPassword($hasher->hashPassword($user, $password));
+
+        $em->persist($user);
+        $em->flush();
+
+        return $this->json(['ok' => true, 'id' => $user->getId()]);
+    }
+
+    #[Route('/api/login', methods: ['POST'])]
+    public function login(
+        Request $request,
+        EntityManagerInterface $em,
+        UserRepository $users,
+        UserPasswordHasherInterface $hasher
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $mail = trim((string)($data['mail'] ?? ''));
+        $password = (string)($data['password'] ?? '');
+
+        /** @var User|null $user */
+        $user = $users->findOneBy(['mail' => $mail]);
+        if (!$user || !$hasher->isPasswordValid($user, $password)) {
+            return $this->json(['error' => 'identifiants invalides'], 401);
+        }
+
+        $rawToken = bin2hex(random_bytes(32));
+        $hash = hash('sha256', $rawToken);
+
+        $expiresAt = (new \DateTimeImmutable())->modify('+7 days');
+
+        $token = new UserToken();
+        $token->setUser($user);
+        $token->setTokenHash($hash);
+        $token->setCreatedAt(new \DateTimeImmutable());
+        $token->setExpiresAt($expiresAt);
+
+        $em->persist($token);
+        $em->flush();
+
+        $cookie = Cookie::create('connect.uid')
+            ->withValue($rawToken)
+            ->withHttpOnly(true)
+            ->withSecure(false) // true en prod (HTTPS)
+            ->withSameSite(Cookie::SAMESITE_LAX)
+            ->withPath('/')
+            ->withExpires($expiresAt->getTimestamp());
+
+        $response = $this->json([
+            'ok' => true,
+            'user' => [
+                'id' => $user->getId(),
+                'mail' => $user->getMail(),
+                'roles' => $user->getRoles(),
+            ],
+        ]);
+        $response->headers->setCookie($cookie);
+
+        return $response;
+    }
+
+    #[Route('/api/me', methods: ['GET'])]
+    public function me(Security $security): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $security->getUser();
+
+        return $this->json([
+            'user' => $user ? [
+                'id' => $user->getId(),
+                'mail' => $user->getMail(),
+                'roles' => $user->getRoles(),
+            ] : null
+        ]);
+    }
+
+    #[Route('/api/logout', methods: ['POST'])]
+    public function logout(
+        Request $request,
+        EntityManagerInterface $em,
+        UserTokenRepository $tokens
+    ): JsonResponse {
+        $rawToken = (string) $request->cookies->get('connect.uid');
+        if ($rawToken !== '') {
+            $hash = hash('sha256', $rawToken);
+            $token = $tokens->findOneBy(['tokenHash' => $hash]);
+            if ($token) {
+                $em->remove($token);
+                $em->flush();
+            }
+        }
+
+        $response = $this->json(['ok' => true]);
+        $response->headers->clearCookie('connect.uid', '/');
+
+        return $response;
+    }
+}

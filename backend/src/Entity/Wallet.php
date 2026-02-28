@@ -18,9 +18,10 @@ class Wallet
 
     #[ORM\Column]
     private ?float $balance = null;
+
     #[Ignore]
     #[ORM\OneToOne(inversedBy: 'wallet', cascade: ['persist', 'remove'])]
-    private ?User $clientId = null;
+    private ?User $client = null;
 
     /**
      * @var Collection<int, Transactions>
@@ -53,19 +54,17 @@ class Wallet
     public function setBalance(float $balance): static
     {
         $this->balance = $balance;
-
         return $this;
     }
 
-    public function getClientId(): ?User
+    public function getClient(): ?User
     {
-        return $this->clientId;
+        return $this->client;
     }
 
-    public function setClientId(?User $clientId): static
+    public function setClient(?User $client): static
     {
-        $this->clientId = $clientId;
-
+        $this->client = $client;
         return $this;
     }
 
@@ -90,7 +89,6 @@ class Wallet
     public function removeTransaction(Transactions $transaction): static
     {
         if ($this->transactions->removeElement($transaction)) {
-            // set the owning side to null (unless already changed)
             if ($transaction->getWalletId() === $this) {
                 $transaction->setWalletId(null);
             }
@@ -120,7 +118,6 @@ class Wallet
     public function removeAqcuieredCrypto(AcquieredCrypto $aqcuieredCrypto): static
     {
         if ($this->aqcuieredCryptos->removeElement($aqcuieredCrypto)) {
-            // set the owning side to null (unless already changed)
             if ($aqcuieredCrypto->getWalletId() === $this) {
                 $aqcuieredCrypto->setWalletId(null);
             }
