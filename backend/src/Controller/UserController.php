@@ -31,7 +31,32 @@ final class UserController extends AbstractController
 
     return $this->json(['users' => $result]);
   }
-  
+  #[Route('/{id}/password', name: '_verify_password', methods: ['POST', 'PATCH'])]
+  public function verifyPassword(
+    int $id,
+    Request $request,
+    UserRepository $userRepository,
+    UserPasswordHasherInterface $passwordHasher
+  ): JsonResponse {
+    $data = json_decode($request->getContent(), true);
+
+    $user = $userRepository->find($id);
+
+    if (!$user) {
+      return $this->json(['message' => 'User not found'], 404);
+    }
+
+    if (empty($data['password'])) {
+      return $this->json(['message' => 'Password required'], 400);
+    }
+
+    if ($passwordHasher->isPasswordValid($user, $data['password'])) {
+      return $this->json(['valid' => true]);
+    }
+
+    return $this->json(['valid' => false], 401);
+  }
+
   #[Route('/{id}', name: '_show', methods: ['GET'])]
   public function show(int $id, UserRepository $userRepository): JsonResponse
   {
@@ -54,9 +79,6 @@ final class UserController extends AbstractController
     }
 
     $user = new User();
-    $plainPassword = $this->generatePassword();
-    $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
-    $user->setPassword($hashedPassword);
     $user->setCreationDate(new \DateTime());
 
     $form = $this->createForm(UserType::class, $user);
@@ -68,7 +90,12 @@ final class UserController extends AbstractController
       ], 422);
     }
 
-    if ($user->getRole() === Roles::CLIENT && $user->getWallet() === null) {
+    $plainPassword = $this->generatePassword();
+    $user->setPassword(
+      $passwordHasher->hashPassword($user, $plainPassword)
+    );
+
+    if ($user->getRole() === Roles::ROLE_USER && $user->getWallet() === null) {
       $wallet = new Wallet();
       $wallet->setBalance(500);
       $user->setWallet($wallet);
@@ -78,7 +105,10 @@ final class UserController extends AbstractController
     $em->persist($user);
     $em->flush();
 
-    return $this->json($this->userToArray($user), 201);
+    return $this->json([
+      'user' => $this->userToArray($user),
+      'generatedPassword' => $plainPassword
+    ], 201);
   }
 
 
@@ -104,6 +134,7 @@ final class UserController extends AbstractController
         'errors' => (string) $form->getErrors(true, false),
       ], 422);
     }
+
 
     // Vérifie si un nouveau mot de passe a été envoyé dans $data
     if (!empty($data['password'])) {
