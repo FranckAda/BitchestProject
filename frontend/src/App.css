@@ -2,6 +2,7 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
+  width: 100%;
   text-align: center;
 }
 
@@ -39,4 +40,196 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* =========================
+   LOGIN (modern + responsive)
+   ========================= */
+
+/* plein écran même si #root a un max-width */
+.login-container {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #eaf2ff;
+
+  background:
+    radial-gradient(900px 500px at 15% 10%, rgba(0, 198, 255, 0.22), transparent 60%),
+    radial-gradient(700px 450px at 85% 20%, rgba(0, 114, 255, 0.22), transparent 55%),
+    radial-gradient(900px 650px at 50% 110%, rgba(124, 58, 237, 0.18), transparent 60%),
+    linear-gradient(135deg, #07101c 0%, #050a13 50%, #040812 100%);
+}
+
+.login-card {
+  width: min(440px, 100%);
+  padding: clamp(22px, 4vw, 34px);
+  border-radius: 18px;
+  text-align: center;
+
+  background: rgba(9, 20, 35, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(
+    600px 250px at 20% 0%,
+    rgba(0, 198, 255, 0.18),
+    transparent 55%
+  );
+  pointer-events: none;
+}
+
+.login-title {
+  margin: 0 0 8px 0;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-size: clamp(24px, 3.2vw, 30px);
+
+  background: linear-gradient(135deg, #9ae6ff, #5aa7ff, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.login-subtitle {
+  margin: 0 0 22px 0;
+  font-weight: 500;
+  font-size: clamp(14px, 2.2vw, 16px);
+  color: rgba(234, 242, 255, 0.82);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-input {
+  padding: 13px 14px;
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #eaf2ff;
+
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.06s ease;
+}
+
+.login-input::placeholder {
+  color: rgba(234, 242, 255, 0.55);
+}
+
+.login-input:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.login-input:focus,
+.login-input:focus-visible {
+  border-color: rgba(0, 198, 255, 0.65);
+  box-shadow: 0 0 0 4px rgba(0, 198, 255, 0.16);
+}
+
+.login-input:active {
+  transform: scale(0.99);
+}
+
+.login-button {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: none;
+
+  background: linear-gradient(135deg, #00c6ff, #0072ff, #7c3aed);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.2s ease, opacity 0.2s ease;
+}
+
+.login-button:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.login-button:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.login-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  filter: none;
+  transform: none;
+}
+
+.login-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 198, 255, 0.18);
+}
+
+.login-switch {
+  margin-top: 16px;
+  font-size: 14px;
+  color: rgba(234, 242, 255, 0.78);
+}
+
+.login-switchLink {
+  margin-left: 6px;
+  color: #7dd3fc;
+  font-weight: 800;
+  cursor: pointer;
+
+  text-decoration: underline;
+  text-decoration-color: rgba(125, 211, 252, 0.35);
+  text-underline-offset: 3px;
+}
+
+.login-switchLink:hover {
+  color: #a5e7ff;
+  text-decoration-color: rgba(165, 231, 255, 0.55);
+}
+
+.login-error,
+.login-info {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.login-error {
+  color: #ffd7d7;
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.22);
+}
+
+.login-info {
+  color: #d9ffe8;
+  background: rgba(123, 237, 159, 0.12);
+  border: 1px solid rgba(123, 237, 159, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-input,
+  .login-button {
+    transition: none;
+  }
 }

@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Core\Security;
 
 final class AuthController extends AbstractController
 {
@@ -40,12 +39,8 @@ final class AuthController extends AbstractController
 
         $user = new User();
         $user->setMail($mail);
-
-        // Inutile si ton User::__construct() set déjà creationDate + role,
-        // mais on le laisse explicite si tu préfères :
-        // $user->setCreationDate(new \DateTimeImmutable());
+        $user->setCreationDate(new \DateTimeImmutable());
         $user->setRole(Roles::ROLE_USER);
-
         $user->setPassword($hasher->hashPassword($user, $password));
 
         $em->persist($user);
@@ -74,7 +69,6 @@ final class AuthController extends AbstractController
 
         $rawToken = bin2hex(random_bytes(32));
         $hash = hash('sha256', $rawToken);
-
         $expiresAt = (new \DateTimeImmutable())->modify('+7 days');
 
         $token = new UserToken();
@@ -108,17 +102,18 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/api/me', methods: ['GET'])]
-    public function me(Security $security): JsonResponse
+    public function me(): JsonResponse
     {
         /** @var User|null $user */
-        $user = $security->getUser();
+        $user = $this->getUser();
 
         return $this->json([
-            'user' => $user ? [
-                'id' => $user->getId(),
-                'mail' => $user->getMail(),
-                'roles' => $user->getRoles(),
-            ] : null
+            'ok' => true,
+            'user' => [
+                'id' => $user?->getId(),
+                'mail' => $user?->getMail(),
+                'roles' => $user?->getRoles(),
+            ],
         ]);
     }
 

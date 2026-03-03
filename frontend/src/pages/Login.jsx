@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import styled from "styled-components";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [register, setRegister] = useState(false);
 
   const [mail, setMail] = useState("");
@@ -16,6 +19,13 @@ export default function Login() {
     setRegister((v) => !v);
     setError("");
     setInfo("");
+  }
+
+  function onSwitchKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      Switch();
+    }
   }
 
   async function apiFetch(url, body) {
@@ -40,6 +50,7 @@ export default function Login() {
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
+        // ignore JSON parse
       }
 
       if (!res.ok) {
@@ -96,6 +107,8 @@ export default function Login() {
         setInfo("Connecté");
       }
 
+      const redirectTo = location.state?.from?.pathname || "/dashboard";
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message || "Erreur inconnue");
     } finally {
@@ -104,14 +117,14 @@ export default function Login() {
   }
 
   return (
-    <Container>
-      <Card>
-        <Title>BitChest</Title>
+    <div className="login-container">
+      <div className="login-card">
+        <h2 className="login-title">BitChest</h2>
+        <h3 className="login-subtitle">{register ? "Sign up" : "Sign in"}</h3>
 
-        <Subtitle>{register ? "Sign up" : "Sign in"}</Subtitle>
-
-        <form onSubmit={handleSubmit}>
-          <Input
+        <form className="login-form" onSubmit={handleSubmit}>
+          <input
+            className="login-input"
             type="email"
             placeholder="Email address"
             value={mail}
@@ -119,7 +132,8 @@ export default function Login() {
             autoComplete="email"
           />
 
-          <Input
+          <input
+            className="login-input"
             type="password"
             placeholder="Password"
             value={password}
@@ -128,7 +142,8 @@ export default function Login() {
           />
 
           {register && (
-            <Input
+            <input
+              className="login-input"
               type="password"
               placeholder="Confirm password"
               value={confirm}
@@ -137,108 +152,27 @@ export default function Login() {
             />
           )}
 
-          {error && <MessageError>{error}</MessageError>}
-          {info && <MessageInfo>{info}</MessageInfo>}
+          {error && <p className="login-error">{error}</p>}
+          {info && <p className="login-info">{info}</p>}
 
-          <PrimaryButton disabled={loading} type="submit">
+          <button className="login-button" disabled={loading} type="submit">
             {loading ? "..." : register ? "Sign up" : "Sign in"}
-          </PrimaryButton>
+          </button>
         </form>
 
-        <SwitchText>
+        <p className="login-switch">
           {register ? "Already have an account?" : "Don't have an account?"}
-          <SwitchSpan onClick={Switch}>
+          <span
+            className="login-switchLink"
+            onClick={Switch}
+            onKeyDown={onSwitchKeyDown}
+            role="button"
+            tabIndex={0}
+          >
             {register ? " Sign in" : " Sign up"}
-          </SwitchSpan>
-        </SwitchText>
-      </Card>
-    </Container>
+          </span>
+        </p>
+      </div>
+    </div>
   );
 }
-
-/* ================== STYLES ================== */
-
-const Container = styled.div`
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-`;
-
-const Card = styled.div`
-  background: #081b2e;
-  width: 350px;
-  padding: 40px 30px;
-  border-radius: 12px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
-  text-align: center;
-  color: white;
-`;
-
-const Title = styled.h2`
-  margin-bottom: 10px;
-  font-weight: bold;
-`;
-
-const Subtitle = styled.h3`
-  margin-bottom: 25px;
-  font-weight: 400;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  border: none;
-  background: #0f2a44;
-  color: white;
-  outline: none;
-
-  &::placeholder {
-    color: #6fa8dc;
-  }
-`;
-
-const PrimaryButton = styled.button`
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #00c6ff, #0072ff);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-  opacity: ${(p) => (p.disabled ? 0.6 : 1)};
-
-  &:hover {
-    opacity: 0.9;
-  }
-`;
-
-const SwitchText = styled.p`
-  margin-top: 15px;
-  font-size: 14px;
-`;
-
-const SwitchSpan = styled.span`
-  color: #00c6ff;
-  font-weight: bold;
-  cursor: pointer;
-  margin-left: 5px;
-`;
-
-const MessageError = styled.p`
-  margin: 0 0 12px 0;
-  color: #ff6b6b;
-  font-size: 14px;
-`;
-
-const MessageInfo = styled.p`
-  margin: 0 0 12px 0;
-  color: #7bed9f;
-  font-size: 14px;
-`;

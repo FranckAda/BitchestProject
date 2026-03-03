@@ -2,15 +2,14 @@
 
 namespace App\Security;
 
-use App\Entity\UserToken;
 use App\Repository\UserTokenRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
-use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 
 final class CookieTokenAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
 {
@@ -20,29 +19,31 @@ final class CookieTokenAuthenticator extends AbstractAuthenticator implements Au
     {
         $path = $request->getPathInfo();
 
-        if ($path === '/api/login' || $path === '/api/register') {
+        // endpoints publics
+        if ($path === '/api/login' || $path === '/api/register' || $path === '/api/health') {
             return false;
         }
 
-        if (!str_starts_with($path, '/api')) {
-            return false;
-        }
-
-        return $request->cookies->has('connect.uid');
+        // on ne protège que /api/*
+        return str_starts_with($path, '/api');
     }
 
     public function authenticate(Request $request): SelfValidatingPassport
     {
         $rawToken = (string) $request->cookies->get('connect.uid');
+        if ($rawToken === '') {
+            throw new AuthenticationException('Missing token');
+        }
+
         $hash = hash('sha256', $rawToken);
 
         $token = $this->tokens->findOneBy(['tokenHash' => $hash]);
         if (!$token) {
-            throw new AuthenticationException('Token invalide');
+            throw new AuthenticationException('Invalid token');
         }
 
         if ($token->getExpiresAt() && $token->getExpiresAt() < new \DateTimeImmutable()) {
-            throw new AuthenticationException('Token expiré');
+            throw new AuthenticationException('Expired token');
         }
 
         $user = $token->getUser();
@@ -54,16 +55,16 @@ final class CookieTokenAuthenticator extends AbstractAuthenticator implements Au
 
     public function onAuthenticationSuccess(Request $request, $token, string $firewallName): ?JsonResponse
     {
-        return null; 
+        return null;
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?JsonResponse
     {
-        return new JsonResponse(['error' => 'Unauthorized'], 401);
+        return new JsonResponse(['error' => 'unauthenticated'], 401);
     }
 
     public function start(Request $request, ?AuthenticationException $authException = null): JsonResponse
     {
-        return new JsonResponse(['error' => 'Unauthorized'], 401);
+        return new JsonResponse(['error' => 'unauthenticated'], 401);
     }
 }
