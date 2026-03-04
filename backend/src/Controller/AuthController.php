@@ -80,7 +80,8 @@ final class AuthController extends AbstractController
         $em->persist($token);
         $em->flush();
 
-        $cookie = Cookie::create('connect.uid')
+        // IMPORTANT: pas de point dans le nom
+        $cookie = Cookie::create('connect_uid')
             ->withValue($rawToken)
             ->withHttpOnly(true)
             ->withSecure(false) // true en prod (HTTPS)
@@ -96,6 +97,7 @@ final class AuthController extends AbstractController
                 'roles' => $user->getRoles(),
             ],
         ]);
+
         $response->headers->setCookie($cookie);
 
         return $response;
@@ -107,12 +109,16 @@ final class AuthController extends AbstractController
         /** @var User|null $user */
         $user = $this->getUser();
 
+        if (!$user) {
+            return $this->json(['ok' => false, 'error' => 'unauthenticated'], 401);
+        }
+
         return $this->json([
             'ok' => true,
             'user' => [
-                'id' => $user?->getId(),
-                'mail' => $user?->getMail(),
-                'roles' => $user?->getRoles(),
+                'id' => $user->getId(),
+                'mail' => $user->getMail(),
+                'roles' => $user->getRoles(),
             ],
         ]);
     }
@@ -123,7 +129,7 @@ final class AuthController extends AbstractController
         EntityManagerInterface $em,
         UserTokenRepository $tokens
     ): JsonResponse {
-        $rawToken = (string) $request->cookies->get('connect.uid');
+        $rawToken = (string) $request->cookies->get('connect_uid', '');
         if ($rawToken !== '') {
             $hash = hash('sha256', $rawToken);
             $token = $tokens->findOneBy(['tokenHash' => $hash]);
@@ -134,6 +140,9 @@ final class AuthController extends AbstractController
         }
 
         $response = $this->json(['ok' => true]);
+
+        // nettoyage (ancien + nouveau nom, au cas où)
+        $response->headers->clearCookie('connect_uid', '/');
         $response->headers->clearCookie('connect.uid', '/');
 
         return $response;

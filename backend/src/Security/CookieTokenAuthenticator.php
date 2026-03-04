@@ -5,6 +5,8 @@ namespace App\Security;
 use App\Repository\UserTokenRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
@@ -17,22 +19,24 @@ final class CookieTokenAuthenticator extends AbstractAuthenticator implements Au
 
     public function supports(Request $request): ?bool
     {
-        $path = $request->getPathInfo();
-
-        // endpoints publics
-        if ($path === '/api/login' || $path === '/api/register' || $path === '/api/health') {
+        if ($request->isMethod('OPTIONS')) {
             return false;
         }
 
-        // on ne protège que /api/*
+        $path = $request->getPathInfo();
+
+        if (in_array($path, ['/api/login', '/api/register', '/api/health'], true)) {
+            return false;
+        }
+
         return str_starts_with($path, '/api');
     }
 
     public function authenticate(Request $request): SelfValidatingPassport
     {
-        $rawToken = (string) $request->cookies->get('connect.uid');
+        $rawToken = (string) $request->cookies->get('connect_uid', '');
         if ($rawToken === '') {
-            throw new AuthenticationException('Missing token');
+            throw new AuthenticationException('Missing token cookie (connect_uid)');
         }
 
         $hash = hash('sha256', $rawToken);
@@ -53,17 +57,20 @@ final class CookieTokenAuthenticator extends AbstractAuthenticator implements Au
         );
     }
 
-    public function onAuthenticationSuccess(Request $request, $token, string $firewallName): ?JsonResponse
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         return null;
     }
 
-    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?JsonResponse
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        return new JsonResponse(['error' => 'unauthenticated'], 401);
+        return new JsonResponse([
+            'error' => 'unauthenticated',
+            'reason' => $exception->getMessage(),
+        ], 401);
     }
 
-    public function start(Request $request, ?AuthenticationException $authException = null): JsonResponse
+    public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
         return new JsonResponse(['error' => 'unauthenticated'], 401);
     }

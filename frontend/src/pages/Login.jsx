@@ -79,11 +79,12 @@ export default function Login() {
       return;
     }
 
+    
     if (register && password !== confirm) {
       setError("Les mots de passe ne correspondent pas.");
       return;
     }
-
+    
     setLoading(true);
     try {
       if (register) {
