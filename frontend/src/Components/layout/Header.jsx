@@ -1,19 +1,28 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
-const navItems = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/new", label: "Nouvel utilisateur" },
-  { to: "/profile", label: "Profil" },
-  { to: "/crypto", label: "Crypto" },
-  { to: "/cryptos", label: "Marchés" },
-];
-
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    fetch("/api/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setUser(data?.user ?? null))
+      .catch(() => null);
+  }, []);
+
+  const isAdmin = user?.role === "ROLE_ADMIN";
+
+  const navItems = [
+    { to: "/dashboard", label: "Dashboard", adminOnly: true },
+    { to: "/new", label: "Nouvel utilisateur", adminOnly: true },
+    { to: "/profile", label: "Profil", adminOnly: false },
+    { to: "/crypto", label: "Crypto", adminOnly: false },
+    { to: "/cryptos", label: "Marchés", adminOnly: false },
+  ].filter((item) => !item.adminOnly || isAdmin);
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
