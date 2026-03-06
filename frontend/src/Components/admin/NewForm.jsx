@@ -2,7 +2,7 @@ import { useState } from "react";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
 
-export default function NewForm({ service }) {
+export default function NewForm() {
   const [mail, setMail] = useState("");
   const [role, setRole] = useState("client");
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function NewForm({ service }) {
     setSuccess(false);
 
     try {
-      const res = await fetch(`/api/${service}/new`, {
+      const res = await fetch(`/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

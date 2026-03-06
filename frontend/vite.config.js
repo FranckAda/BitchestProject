@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: "https://trade-lessons-marathon-stack.trycloudflare.com",
         changeOrigin: true,
         secure: false,
       },
