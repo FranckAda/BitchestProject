@@ -45,33 +45,47 @@ function CryptoAvatar({ name }) {
   );
 }
 
-export default function CryptoDashboard({ userId }) {
+export default function CryptoDashboard() {
   const [cryptos, setCryptos] = useState([]);
   const [acquieredCryptos, setAcquiered] = useState([]);
   const [user, setUser] = useState({});
   const [search, setSearch] = useState("");
   const [buyingId, setBuyingId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("market"); // "market" | "portfolio"
+  const [activeTab, setActiveTab] = useState("market");
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/crypto", { credentials: "include" }).then((r) => r.json()),
-      fetch("/api/acquieredcrypto", { credentials: "include" }).then((r) =>
-        r.json(),
-      ),
-      fetch(`/api/admin/${userId}`, { credentials: "include" }).then((r) =>
-        r.json(),
-      ),
-    ])
-      .then(([cryptoData, acquiredData, userData]) => {
+    const loadAll = async () => {
+      try {
+        const meRes = await fetch("/api/me", { credentials: "include" });
+        const meData = await meRes.json();
+        if (!meRes.ok) throw new Error(meData.error || "Non authentifié");
+        const currentUser = meData.user;
+
+        const [cryptoData, acquiredData, userData] = await Promise.all([
+          fetch("/api/crypto", { credentials: "include" }).then((r) =>
+            r.json(),
+          ),
+          fetch("/api/acquieredcrypto", { credentials: "include" }).then((r) =>
+            r.json(),
+          ),
+          fetch(`/api/admin/${currentUser.id}`, {
+            credentials: "include",
+          }).then((r) => r.json()),
+        ]);
+
         setCryptos(cryptoData.CryptoCurrencies || []);
         setAcquiered(acquiredData.acquieredCrypto || []);
         setUser(userData || {});
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, [userId]);
+      } catch (err) {
+        console.error("CryptoDashboard load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAll();
+  }, []);
 
   // Regroupe les cryptos acquises
   const groupedCryptos = Object.values(
@@ -99,12 +113,10 @@ export default function CryptoDashboard({ userId }) {
 
   const handleBuySuccess = () => {
     setBuyingId(null);
-    // Refresh acquired cryptos
     fetch("/api/acquieredcrypto", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => setAcquiered(data.acquieredCrypto || []));
-    // Refresh user wallet
-    fetch(`/api/admin/${userId}`, { credentials: "include" })
+    fetch(`/api/admin/${user.id}`, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => setUser(data || {}));
   };
@@ -120,6 +132,7 @@ export default function CryptoDashboard({ userId }) {
           padding: "32px 36px 60px",
         }}
       >
+        {/* ── Page header ── */}
         <div
           style={{
             display: "flex",
@@ -145,6 +158,7 @@ export default function CryptoDashboard({ userId }) {
             </p>
           </div>
 
+          {/* Wallet badge */}
           <div
             style={{
               background: "#fff",
@@ -180,6 +194,7 @@ export default function CryptoDashboard({ userId }) {
           </div>
         </div>
 
+        {/* ── Tabs ── */}
         <div
           style={{
             display: "flex",

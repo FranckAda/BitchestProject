@@ -32,11 +32,10 @@ export default function App() {
         {/* Routes protégées */}
         <Route element={<RequireAuth />}>
           <Route path="/cryptos" element={<CryptoChart />} />
-          <Route path="/edit" element={<EditForm userId={2} />} />
-          <Route path="/new" element={<NewForm service="admin" />} />
+          <Route path="/new" element={<NewForm />} />
           <Route path="/dashboard" element={<Dashbord />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/crypto" element={<CryptoDashbord userId={2} />} />
+          <Route path="/crypto" element={<CryptoDashbord />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
