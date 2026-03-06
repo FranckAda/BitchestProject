@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Header from "../layout/Header";
+import Footer from "../layout/Footer";
 
 const EMPTY_FORM = {
   mail: "",
@@ -158,9 +159,9 @@ export default function Dashbord() {
   }
 
   return (
-    
-    <section className="dashboard">
+    <>
       <Header />
+    <section className="dashboard">
       <div className="dashboard__header">
         <div>
           <p className="dashboard__eyebrow">Administration</p>
@@ -354,5 +355,8 @@ export default function Dashbord() {
         </div>
       )}
     </section>
+
+    <Footer />
+    </>
   );
 }

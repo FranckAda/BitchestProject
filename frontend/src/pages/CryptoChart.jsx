@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Header from "../Components/layout/Header";
+import Footer from "../Components/layout/Footer";
 
 
 const CRYPTOS = [
@@ -351,6 +352,8 @@ export default function CryptoChart() {
         </p>
       </div>
     </div>
+
+    <Footer />
     </>
   );
 }

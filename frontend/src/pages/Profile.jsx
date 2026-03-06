@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../Components/layout/Header";
+import Footer from "../Components/layout/Footer";
 
 const INITIAL_FORM = {
   mail: "",
@@ -326,6 +327,8 @@ export default function Profile() {
         </div>
       </div>
     </section>
+
+    <Footer />
     </>
   );
 }
