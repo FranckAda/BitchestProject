@@ -24,6 +24,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private string $password = '';
 
+    #[ORM\Column(length: 255)]
+    private ?string $nom = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $prenom = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $fonction = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $creationDate;
 
@@ -55,6 +64,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
+
+    public function setNom(string $nom): static
+    {
+        $this->nom = $nom;
+        return $this;
+    }
+
+    public function getPrenom(): ?string
+    {
+        return $this->prenom;
+    }
+
+    public function setPrenom(string $prenom): static
+    {
+        $this->prenom = $prenom;
+        return $this;
+    }
+
+    public function getFonction(): ?string
+    {
+        return $this->fonction;
+    }
+
+    public function setFonction(?string $fonction): static
+    {
+        $this->fonction = $fonction;
+        return $this;
+    }
+
     public function getUserIdentifier(): string
     {
         return (string) $this->mail;
@@ -64,7 +106,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = [$this->role->value];
 
-        // Garantie du rôle de base
         if (!in_array(Roles::ROLE_USER->value, $roles, true)) {
             $roles[] = Roles::ROLE_USER->value;
         }

@@ -16,6 +16,8 @@ class UserType extends AbstractType
         $builder
             ->add('mail')
             ->add('password')
+            ->add('prenom')
+            ->add('nom')
             ->add('role', EnumType::class, [
                 'class' => Roles::class,
             ]);;

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\UserToken;
+use App\Entity\Wallet;
 use App\Enum\Roles;
 use App\Repository\UserRepository;
 use App\Repository\UserTokenRepository;
@@ -26,11 +27,16 @@ final class AuthController extends AbstractController
     ): JsonResponse {
         $data = json_decode($request->getContent(), true) ?? [];
 
-        $mail = trim((string)($data['mail'] ?? ''));
-        $password = (string)($data['password'] ?? '');
+        $mail = trim((string) ($data['mail'] ?? ''));
+        $password = (string) ($data['password'] ?? '');
+        $nom = trim((string) ($data['nom'] ?? ''));
+        $prenom = trim((string) ($data['prenom'] ?? ''));
+        $fonction = isset($data['fonction']) ? trim((string) $data['fonction']) : null;
 
-        if ($mail === '' || $password === '') {
-            return $this->json(['error' => 'mail/password requis'], 400);
+        if ($mail === '' || $password === '' || $nom === '' || $prenom === '') {
+            return $this->json([
+                'error' => 'mail, password, nom et prenom requis'
+            ], 400);
         }
 
         if ($users->findOneBy(['mail' => $mail])) {
@@ -39,14 +45,25 @@ final class AuthController extends AbstractController
 
         $user = new User();
         $user->setMail($mail);
+        $user->setNom($nom);
+        $user->setPrenom($prenom);
+        $user->setFonction($fonction !== '' ? $fonction : null);
         $user->setCreationDate(new \DateTimeImmutable());
         $user->setRole(Roles::ROLE_USER);
         $user->setPassword($hasher->hashPassword($user, $password));
 
+        $wallet = new Wallet();
+        $wallet->setBalance(500);
+        $user->setWallet($wallet);
+
+        $em->persist($wallet);
         $em->persist($user);
         $em->flush();
 
-        return $this->json(['ok' => true, 'id' => $user->getId()]);
+        return $this->json([
+            'ok' => true,
+            'user' => $this->userToArray($user),
+        ], 201);
     }
 
     #[Route('/api/login', methods: ['POST'])]
@@ -58,11 +75,12 @@ final class AuthController extends AbstractController
     ): JsonResponse {
         $data = json_decode($request->getContent(), true) ?? [];
 
-        $mail = trim((string)($data['mail'] ?? ''));
-        $password = (string)($data['password'] ?? '');
+        $mail = trim((string) ($data['mail'] ?? ''));
+        $password = (string) ($data['password'] ?? '');
 
         /** @var User|null $user */
         $user = $users->findOneBy(['mail' => $mail]);
+
         if (!$user || !$hasher->isPasswordValid($user, $password)) {
             return $this->json(['error' => 'identifiants invalides'], 401);
         }
@@ -80,22 +98,17 @@ final class AuthController extends AbstractController
         $em->persist($token);
         $em->flush();
 
-        // IMPORTANT: pas de point dans le nom
         $cookie = Cookie::create('connect_uid')
             ->withValue($rawToken)
             ->withHttpOnly(true)
-            ->withSecure(false) // true en prod (HTTPS)
+            ->withSecure(false)
             ->withSameSite(Cookie::SAMESITE_LAX)
             ->withPath('/')
             ->withExpires($expiresAt->getTimestamp());
 
         $response = $this->json([
             'ok' => true,
-            'user' => [
-                'id' => $user->getId(),
-                'mail' => $user->getMail(),
-                'roles' => $user->getRoles(),
-            ],
+            'user' => $this->userToArray($user),
         ]);
 
         $response->headers->setCookie($cookie);
@@ -110,16 +123,15 @@ final class AuthController extends AbstractController
         $user = $this->getUser();
 
         if (!$user) {
-            return $this->json(['ok' => false, 'error' => 'unauthenticated'], 401);
+            return $this->json([
+                'ok' => false,
+                'error' => 'unauthenticated'
+            ], 401);
         }
 
         return $this->json([
             'ok' => true,
-            'user' => [
-                'id' => $user->getId(),
-                'mail' => $user->getMail(),
-                'roles' => $user->getRoles(),
-            ],
+            'user' => $this->userToArray($user),
         ]);
     }
 
@@ -130,9 +142,11 @@ final class AuthController extends AbstractController
         UserTokenRepository $tokens
     ): JsonResponse {
         $rawToken = (string) $request->cookies->get('connect_uid', '');
+
         if ($rawToken !== '') {
             $hash = hash('sha256', $rawToken);
             $token = $tokens->findOneBy(['tokenHash' => $hash]);
+
             if ($token) {
                 $em->remove($token);
                 $em->flush();
@@ -141,10 +155,28 @@ final class AuthController extends AbstractController
 
         $response = $this->json(['ok' => true]);
 
-        // nettoyage (ancien + nouveau nom, au cas où)
         $response->headers->clearCookie('connect_uid', '/');
         $response->headers->clearCookie('connect.uid', '/');
 
         return $response;
+    }
+
+    private function userToArray(User $user): array
+    {
+        return [
+            'id' => $user->getId(),
+            'mail' => $user->getMail(),
+            'nom' => $user->getNom(),
+            'prenom' => $user->getPrenom(),
+            'fonction' => $user->getFonction(),
+            'role' => $user->getRole()?->value,
+            'roles' => $user->getRoles(),
+            'creationDate' => $user->getCreationDate()?->format('Y-m-d H:i:s'),
+            'walletBalance' => $user->getWallet()?->getBalance(),
+            'wallet' => $user->getWallet() ? [
+                'id' => $user->getWallet()->getId(),
+                'balance' => $user->getWallet()->getBalance(),
+            ] : null,
+        ];
     }
 }
