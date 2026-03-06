@@ -46,8 +46,8 @@ export default function Header() {
           <NavLink to="/dashboard" className="site-header__brand">
             <span className="site-header__logo">C</span>
             <div>
-              <strong>Crypto Admin</strong>
-              <span>Panel sécurisé</span>
+              <strong>BitChest</strong>
+              <span>First on crypto</span>
             </div>
           </NavLink>
 
