@@ -15,8 +15,28 @@ export default function Login() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
 
+  function generateRandomToken(length = 32) {
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
   function Switch() {
-    setRegister((v) => !v);
+    setRegister((prev) => {
+      const next = !prev;
+
+      if (next) {
+        const token = generateRandomToken(16);
+        setPassword(token);
+        setConfirm(token);
+      } else {
+        setPassword("");
+        setConfirm("");
+      }
+
+      return next;
+    });
+
     setError("");
     setInfo("");
   }
@@ -117,7 +137,6 @@ export default function Login() {
   }
 
   return (
-    <>
     <div className="login-container">
       <div className="login-card">
         <h2 className="login-title">BitChest</h2>
@@ -140,6 +159,7 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete={register ? "new-password" : "current-password"}
+            style={register ? { display: "none" } : {}}
           />
 
           {register && (
@@ -150,6 +170,7 @@ export default function Login() {
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               autoComplete="new-password"
+              style={{ display: "none" }}
             />
           )}
 
@@ -175,6 +196,5 @@ export default function Login() {
         </p>
       </div>
     </div>
-    </>
   );
 }
